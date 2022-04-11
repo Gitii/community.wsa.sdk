@@ -1,16 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Community.Wsa.Sdk.Exceptions;
-using Community.Wsa.Sdk.Strategies.Packages;
 using Community.Wsx.Shared;
 
-namespace Community.Wsa.Sdk.Strategies.Api;
+namespace Community.Wsa.Sdk;
 
+/// <inheritdoc />
 public class AdbClient : IAdb
 {
     private readonly IProcessManager _processManager;
@@ -50,9 +49,9 @@ public class AdbClient : IAdb
     private string FindValidPlatformToolsFolder(string[] folderCandidates)
     {
         return folderCandidates
-            .Where(_io.DirectoryExists)
-            .Where(HasFiles("adb.exe", "AdbWinApi.dll", "fastboot.exe"))
-            .FirstOrDefault() ?? String.Empty;
+                .Where(_io.DirectoryExists)
+                .Where(HasFiles("adb.exe", "AdbWinApi.dll", "fastboot.exe"))
+                .FirstOrDefault() ?? String.Empty;
     }
 
     private Func<string, bool> HasFiles(params string[] fileNames)
@@ -61,6 +60,7 @@ public class AdbClient : IAdb
             fileNames.All((fileName) => _io.FileExists(_io.Combine(directory, fileName)));
     }
 
+    /// <inheritdoc />
     public Task InstallPackageAsync(
         string deviceSerialNumber,
         string filePath,
@@ -73,11 +73,13 @@ public class AdbClient : IAdb
         );
     }
 
+    /// <inheritdoc />
     public Task UninstallPackageAsync(string deviceSerialNumber, string packageName)
     {
         return ExecuteAdbCommandAsync(new[] { "-s", deviceSerialNumber, "uninstall", packageName });
     }
 
+    /// <inheritdoc />
     public Task ConnectAsync(EndPoint endPoint)
     {
         var address = GetAddress(endPoint);
@@ -101,6 +103,7 @@ public class AdbClient : IAdb
         return str;
     }
 
+    /// <inheritdoc />
     public async Task<KnownDevice[]> ListDevicesAsync()
     {
         var lines = await ExecuteAdbCommandAsync(new string[] { "devices", "-l" })
@@ -118,7 +121,15 @@ public class AdbClient : IAdb
     )
     {
         var dump = await ExecuteAdbCommandAsync(
-                new string[] { "-s", deviceSerialNumber, "shell", "dumpsys", "package", packageName },
+                new string[]
+                {
+                    "-s",
+                    deviceSerialNumber,
+                    "shell",
+                    "dumpsys",
+                    "package",
+                    packageName
+                },
                 outputMustNotInclude: $"Unable to find package: {packageName}"
             )
             .ConfigureAwait(false);
@@ -158,6 +169,7 @@ public class AdbClient : IAdb
         }
     }
 
+    /// <inheritdoc />
     public async Task<PackageInfo[]> GetInstalledPackagesAsync(string deviceSerialNumber)
     {
         var rawPackageNames = await ExecuteAdbCommandAsync(
@@ -184,6 +196,7 @@ public class AdbClient : IAdb
         return packages.ToArray();
     }
 
+    /// <inheritdoc />
     public async Task<PackageInfo?> GetInstalledPackageAsync(
         string deviceSerialNumber,
         string packageName
@@ -199,6 +212,7 @@ public class AdbClient : IAdb
         }
     }
 
+    /// <inheritdoc />
     public Task LaunchPackageAsync(string deviceSerialNumber, string packageName)
     {
         return ExecuteAdbCommandAsync(
@@ -207,6 +221,7 @@ public class AdbClient : IAdb
         );
     }
 
+    /// <inheritdoc />
     public Task DisconnectAsync(EndPoint endPoint)
     {
         var address = GetAddress(endPoint);
@@ -240,9 +255,9 @@ public class AdbClient : IAdb
         string FindProperty(string prefix)
         {
             return parts?.FirstOrDefault((prop) => prop.StartsWith(prefix + ":"))?.Remove(
-                0,
-                prefix.Length + 1
-            ) ?? string.Empty;
+                    0,
+                    prefix.Length + 1
+                ) ?? string.Empty;
         }
 
         DeviceType ParseDeviceType(string rawDeviceType)
@@ -253,10 +268,10 @@ public class AdbClient : IAdb
                 "device" => DeviceType.Device,
                 "emulator" => DeviceType.Emulator,
                 _
-                    => throw new ArgumentOutOfRangeException(
-                        rawDeviceType,
-                        $"Device type '{rawDeviceType}' is unknown!"
-                    ),
+                  => throw new ArgumentOutOfRangeException(
+                      rawDeviceType,
+                      $"Device type '{rawDeviceType}' is unknown!"
+                  ),
             };
         }
     }
@@ -272,7 +287,11 @@ public class AdbClient : IAdb
             throw new AdbException(AdbError.AdbIsNotInstalled);
         }
 
-        var startInfo = new ProcessStartInfo(_adbPath!) { RedirectStandardOutput = true, CreateNoWindow = true };
+        var startInfo = new ProcessStartInfo(_adbPath!)
+        {
+            RedirectStandardOutput = true,
+            CreateNoWindow = true
+        };
         var strCommand = $"adb {string.Join(" ", arguments)}";
 
         foreach (var argument in arguments.Where((s) => s.Length > 0))
@@ -280,11 +299,8 @@ public class AdbClient : IAdb
             startInfo.ArgumentList.Add(argument);
         }
 
-        var process = _processManager.Start(startInfo);
-        if (process == null)
-        {
-            throw new AdbException(AdbError.CannotStartAdb);
-        }
+        var process =
+            _processManager.Start(startInfo) ?? throw new AdbException(AdbError.CannotStartAdb);
 
         var stdOutTask = process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
 
@@ -306,8 +322,10 @@ public class AdbClient : IAdb
             throw new AdbException(AdbError.CommandFailed, strCommand, stdOut);
         }
 
-        if (!string.IsNullOrEmpty(outputMustInclude) &&
-            !stdOut.Contains(outputMustInclude, StringComparison.OrdinalIgnoreCase))
+        if (
+            !string.IsNullOrEmpty(outputMustInclude)
+            && !stdOut.Contains(outputMustInclude, StringComparison.OrdinalIgnoreCase)
+        )
         {
             throw new AdbException(AdbError.CommandFailed, strCommand, stdOut);
         }

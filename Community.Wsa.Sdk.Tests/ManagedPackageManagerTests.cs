@@ -1,5 +1,4 @@
-﻿using Community.Wsa.Sdk.Strategies.Api;
-using FluentAssertions;
+﻿using FluentAssertions;
 using NUnit.Framework;
 
 namespace Community.Wsa.Sdk.Tests;

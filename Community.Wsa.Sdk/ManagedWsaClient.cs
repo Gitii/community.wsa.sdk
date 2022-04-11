@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Community.Wsx.Shared;
 
-namespace Community.Wsa.Sdk.Strategies.Api;
+namespace Community.Wsa.Sdk;
 
+/// <inheritdoc />
 public class ManagedWsaClient : IWsaClient
 {
     private readonly IEnvironment _environment;
@@ -41,6 +42,7 @@ public class ManagedWsaClient : IWsaClient
         return packages.SingleOrDefault();
     }
 
+    /// <inheritdoc />
     public string ProgramFilePath
     {
         get
@@ -78,16 +80,19 @@ public class ManagedWsaClient : IWsaClient
         }
     }
 
+    /// <inheritdoc />
     public bool IsWsaInstalled
     {
         get { return GetWsaPackage() != null; }
     }
 
+    /// <inheritdoc />
     public Task LaunchAsync(string packageName)
     {
         return ExecuteAsync("launch", $"wsa://{packageName}");
     }
 
+    /// <inheritdoc />
     public async Task LaunchWsaSettingsAsync()
     {
         var entries = await GetWsaPackage()?.GetAppListEntriesAsync();
@@ -99,11 +104,13 @@ public class ManagedWsaClient : IWsaClient
         }
     }
 
+    /// <inheritdoc />
     public Task UninstallAsync(string packageName)
     {
         return ExecuteAsync("/uninstall", packageName);
     }
 
+    /// <inheritdoc />
     public Task LaunchDeepLinkAsync(string link)
     {
         return ExecuteAsync("/deeplink", link);
@@ -114,7 +121,9 @@ public class ManagedWsaClient : IWsaClient
         var startInfo = new ProcessStartInfo { CreateNoWindow = false, FileName = "cmd.exe" };
 
         startInfo.ArgumentList.Add("/K");
-        startInfo.ArgumentList.Add(string.Join(" ", (new string[] { ProgramFilePath }).Concat(args)));
+        startInfo.ArgumentList.Add(
+            string.Join(" ", (new string[] { ProgramFilePath }).Concat(args))
+        );
 
         var process = _processManager.Start(startInfo);
 

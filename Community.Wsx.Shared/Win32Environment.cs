@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Community.Wsx.Shared;
+﻿namespace Community.Wsx.Shared;
 
 internal class Win32Environment : IEnvironment
 {

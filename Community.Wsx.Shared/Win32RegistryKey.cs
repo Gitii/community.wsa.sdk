@@ -55,7 +55,7 @@ internal class Win32RegistryKey : IRegistryKey
     {
         return new Win32RegistryKey(
             _registryKey.OpenSubKey(subKey, false)
-            ?? throw new Exception("There is no sub key " + subKey)
+                ?? throw new Exception("There is no sub key " + subKey)
         );
     }
 

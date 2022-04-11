@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace Community.Wsa.Sdk.Strategies.Api;
+namespace Community.Wsa.Sdk;
 
 /// <summary>
 /// Provides functionality to help you call WSA from .NET applications.
@@ -19,7 +18,7 @@ public interface IWsaApi
 
     /// <summary>
     /// Checks if the environment you are running in now supports WSA.
-    /// The error message is returned as out parameter. If wsl is supported, <paramref name="missingCapabilities"/> is <c>null</c>.
+    /// The error message is returned as out parameter. If WSA is supported, <paramref name="missingCapabilities"/> is <c>null</c>.
     /// </summary>
     public bool IsWsaSupported(out string? missingCapabilities);
 
@@ -43,6 +42,14 @@ public interface IWsaApi
     /// Starts the WSA service if it's not already running.
     /// </summary>
     public Task StartServiceAsync();
+
+    /// <summary>
+    /// Returns the device serial number of the WSA device.
+    /// Will fail if the service is not running or adb is not connected.
+    /// Use <see cref="EnsureWsaIsReadyAsync"/> to prepare wsa beforehand.
+    /// </summary>
+    /// <returns>The serial number of the wsa device.</returns>
+    public Task<string> GetDeviceIdAsync();
 
     public const string ADB_WSA_DEVICE_SERIAL_NUMBER = "localhost:58526";
     public const string WSA_MUTEX = "{42CEB0DF-325A-4FBE-BBB6-C259A6C3F0BB}";

@@ -1,12 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net6.0-windows</TargetFrameworks>
+        <TargetFrameworks>net5.0-windows;net6.0-windows</TargetFrameworks>
         <SupportedOSPlatform>windows</SupportedOSPlatform>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <LangVersion>10.0</LangVersion>
     </PropertyGroup>
+
+    <ItemGroup Condition="$(TargetFramework) == 'net5.0-windows'">
+        <PackageReference Include="Portable.System.DateTimeOnly" Version="6.0.1" />
+    </ItemGroup>
 
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
@@ -15,5 +18,10 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
             <_Parameter1>Community.Wsl.Sdk</_Parameter1>
         </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     </ItemGroup>
 </Project>

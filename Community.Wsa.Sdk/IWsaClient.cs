@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Community.Wsa.Sdk.Strategies.Api;
+namespace Community.Wsa.Sdk;
 
 public interface IWsaClient
 {

@@ -2,3 +2,4 @@
 [*.cs]
 command = dotnet
 arguments = csharpier "{file}"
+always_run = true

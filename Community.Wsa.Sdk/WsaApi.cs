@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Community.Wsa.Sdk.Exceptions;
 using Community.Wsx.Shared;
 
-namespace Community.Wsa.Sdk.Strategies.Api;
+namespace Community.Wsa.Sdk;
 
 /// <summary>
 /// <inheritdoc cref="IWsaApi"/>
@@ -112,9 +112,7 @@ public class WsaApi : IWsaApi
 
         progress?.Report("Connecting to Windows Subsystem for Android...");
         await EnsureWsaIsConnectedAsync(progress).ConfigureAwait(false);
-        await _adb.ConnectAsync(
-                new DnsEndPoint(IWsaApi.WSA_HOST_NAME, IWsaApi.WSA_PORT)
-            )
+        await _adb.ConnectAsync(new DnsEndPoint(IWsaApi.WSA_HOST_NAME, IWsaApi.WSA_PORT))
             .ConfigureAwait(false);
     }
 
@@ -122,7 +120,11 @@ public class WsaApi : IWsaApi
     {
         bool connected = false;
         bool triedToConnect = false;
-        var endPoint = new DnsEndPoint(IWsaApi.WSA_HOST_NAME, IWsaApi.WSA_PORT, AddressFamily.InterNetwork);
+        var endPoint = new DnsEndPoint(
+            IWsaApi.WSA_HOST_NAME,
+            IWsaApi.WSA_PORT,
+            AddressFamily.InterNetwork
+        );
 
         do
         {
@@ -161,10 +163,7 @@ public class WsaApi : IWsaApi
     {
         return devices.FirstOrDefault(
             (d) =>
-                d.ModelNumber.Equals(
-                    IWsaApi.WSA_MODEL_NUMBER,
-                    StringComparison.OrdinalIgnoreCase
-                )
+                d.ModelNumber.Equals(IWsaApi.WSA_MODEL_NUMBER, StringComparison.OrdinalIgnoreCase)
         );
     }
 
@@ -215,6 +214,19 @@ public class WsaApi : IWsaApi
         {
             throw new ServiceException(ServiceError.CannotStartService, e);
         }
+    }
+
+    public async Task<string> GetDeviceIdAsync()
+    {
+        var devices = await _adb.ListDevicesAsync().ConfigureAwait(false);
+        var wsa = FindWsaDevice(devices);
+
+        if (wsa.Equals(default(KnownDevice)))
+        {
+            throw new ServiceException(ServiceError.CannotConnectToDevice);
+        }
+
+        return wsa.DeviceSerialNumber;
     }
 
     private Task EnsureThatWsaClientIsRunningAsync()
