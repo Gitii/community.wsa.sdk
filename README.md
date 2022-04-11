@@ -3,7 +3,7 @@
 This project contains a WSA API for Windows developers who wants to integrate WSA 
 features into existing Windows applications. You can enumerate and query packages, install and uninstall packages via C# classes.
 
-Physical devices and other emulators are also supported (see section [WSA and other android devices (for example pysical devices)](#WSA and other android devices (for example pysical devices))).
+Physical devices and other emulators are also supported (see section [WSA and other android devices (for example pysical devices)](#WSA-and-other-android-devices-for-example-pysical-devices)).
 
 ## Supported frameworks
 

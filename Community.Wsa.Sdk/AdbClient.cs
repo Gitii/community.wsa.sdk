@@ -28,8 +28,10 @@ public class AdbClient : IAdb
         _io = io ?? new Win32IO();
     }
 
+    /// <inheritdoc />
     public bool IsInstalled => CheckIfAdbIsAvailable();
 
+    /// <inheritdoc />
     public string? PathToAdb => _adbPath;
 
     private bool CheckIfAdbIsAvailable()
@@ -40,18 +42,19 @@ public class AdbClient : IAdb
                 .GetEnvironmentVariable("PATH")
                 .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
-            _adbPath = _io.Combine(FindValidPlatformToolsFolder(paths), "adb.exe");
+            var bestCandidate = FindValidPlatformToolsFolder(paths);
+            _adbPath = bestCandidate == null ? String.Empty : _io.Combine(bestCandidate, "adb.exe");
         }
 
         return _adbPath != String.Empty;
     }
 
-    private string FindValidPlatformToolsFolder(string[] folderCandidates)
+    private string? FindValidPlatformToolsFolder(string[] folderCandidates)
     {
         return folderCandidates
-                .Where(_io.DirectoryExists)
-                .Where(HasFiles("adb.exe", "AdbWinApi.dll", "fastboot.exe"))
-                .FirstOrDefault() ?? String.Empty;
+            .Where(_io.DirectoryExists)
+            .Where(HasFiles("adb.exe", "AdbWinApi.dll", "fastboot.exe"))
+            .FirstOrDefault();
     }
 
     private Func<string, bool> HasFiles(params string[] fileNames)

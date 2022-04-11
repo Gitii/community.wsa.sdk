@@ -5,6 +5,19 @@
         <SupportedOSPlatform>windows</SupportedOSPlatform>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <IsPackable>true</IsPackable>
+
+        <Description>Shared library for SDKs for Windows Subsystem for Android and Linux</Description>
+        <Copyright>(c) 2022 Gitii</Copyright>
+        <PackageProjectUrl>https://github.com/Gitii/community.wsa.sdk</PackageProjectUrl>
+        <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+        <RepositoryUrl>https://github.com/Gitii/community.wsa.sdk.git</RepositoryUrl>
+        <RepositoryType>Git</RepositoryType>
+        <PackageTags>WSL,WSA,SDK</PackageTags>
+        <GenerateDocumentationFile>True</GenerateDocumentationFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Authors>Gitii</Authors>
+        <Company />
     </PropertyGroup>
 
     <ItemGroup Condition="$(TargetFramework) == 'net5.0-windows'">
