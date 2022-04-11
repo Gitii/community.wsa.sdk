@@ -29,6 +29,8 @@ public class ServiceException : Exception
                 return "Cannot start the WSA-service";
             case ServiceError.CannotConnectToService:
                 return "Adb cannot connect to WSA-service";
+            case ServiceError.CannotConnectToDevice:
+                return "Adb cannot connect to WSA-device";
             default:
                 throw new ArgumentOutOfRangeException(nameof(error), error, null);
         }

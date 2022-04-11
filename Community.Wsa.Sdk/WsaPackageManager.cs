@@ -9,6 +9,7 @@ using Community.Wsx.Shared;
 
 namespace Community.Wsa.Sdk;
 
+/// <inheritdoc />
 public class WsaPackageManager : IPackageManager
 {
     private readonly IAdb _adb;
@@ -31,6 +32,7 @@ public class WsaPackageManager : IPackageManager
         _adb = adb ?? new AdbClient(processManager, environment, _io);
     }
 
+    /// <inheritdoc />
     public Task InstallPackageAsync(
         string deviceId,
         string filePath,
@@ -40,6 +42,7 @@ public class WsaPackageManager : IPackageManager
         return _adb.InstallPackageAsync(deviceId, filePath);
     }
 
+    /// <inheritdoc />
     public async Task<PackageInfo[]> GetAllInstalledPackagesAsync(string deviceId)
     {
         List<PackageInfo> apps = new List<PackageInfo>();
@@ -114,6 +117,7 @@ public class WsaPackageManager : IPackageManager
         return installedApps;
     }
 
+    /// <inheritdoc />
     public async Task<PackageInfo?> GetInstalledPackageAsync(string deviceId, string packageName)
     {
         using var appsKey = GetInstalledAppsKey();
@@ -128,6 +132,7 @@ public class WsaPackageManager : IPackageManager
         return await GetPackageInfoFromKeyAsync(appKey).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
     public Task<bool> IsPackageInstalledAsync(string deviceId, string packageName)
     {
         using var appsKey = GetInstalledAppsKey();
@@ -135,11 +140,13 @@ public class WsaPackageManager : IPackageManager
         return Task.FromResult(appsKey.GetSubKeyNames().Contains(packageName));
     }
 
+    /// <inheritdoc />
     public Task UninstallPackageAsync(string deviceId, string packageName)
     {
         return _wsaClient.UninstallAsync(packageName);
     }
 
+    /// <inheritdoc />
     public Task LaunchAsync(string deviceId, string packageName)
     {
         return _wsaClient.LaunchAsync(packageName);

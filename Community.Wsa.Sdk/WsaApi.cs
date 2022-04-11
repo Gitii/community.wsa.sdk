@@ -11,9 +11,7 @@ using Community.Wsx.Shared;
 
 namespace Community.Wsa.Sdk;
 
-/// <summary>
-/// <inheritdoc cref="IWsaApi"/>
-/// </summary>
+/// <inheritdoc />
 public class WsaApi : IWsaApi
 {
     private readonly IIo _io;
@@ -22,9 +20,6 @@ public class WsaApi : IWsaApi
     private readonly IAdb _adb;
     private readonly IProcessManager _processManager;
 
-    /// <summary>
-    /// <inheritdoc cref="IWsaApi"/>
-    /// </summary>
     public WsaApi(
         IAdb? adb = null,
         IWsaClient? wsaClient = null,
@@ -42,9 +37,7 @@ public class WsaApi : IWsaApi
         IsWsaInstalled = _wsaClient.IsWsaInstalled;
     }
 
-    /// <summary>
-    /// <inheritdoc cref="IWsaApi.IsWsaSupported(out string?)"/>
-    /// </summary>
+    /// <inheritdoc />
     public bool IsWsaSupported(out string? missingCapabilities)
     {
         missingCapabilities = null;
@@ -83,6 +76,7 @@ public class WsaApi : IWsaApi
         return true;
     }
 
+    /// <inheritdoc />
     public bool IsRunning
     {
         get
@@ -99,8 +93,10 @@ public class WsaApi : IWsaApi
         }
     }
 
+    /// <inheritdoc />
     public bool IsWsaInstalled { get; }
 
+    /// <inheritdoc />
     public async Task EnsureWsaIsReadyAsync(IProgress<string>? progress = null)
     {
         if (!IsRunning)
@@ -196,6 +192,7 @@ public class WsaApi : IWsaApi
         }
     }
 
+    /// <inheritdoc />
     public async Task StartServiceAsync()
     {
         try
@@ -216,6 +213,7 @@ public class WsaApi : IWsaApi
         }
     }
 
+    /// <inheritdoc />
     public async Task<string> GetDeviceIdAsync()
     {
         var devices = await _adb.ListDevicesAsync().ConfigureAwait(false);

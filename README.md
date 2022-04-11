@@ -49,7 +49,7 @@ dotnet add package Community.Wsa.Sdk
 ### Basic usage of wsa api
 
 ```csharp
-using Community.Wsa.Sdk.Strategies.Api;
+using Community.Wsa.Sdk;
 
 // Create instance
 var api = new WsaApi();
@@ -78,7 +78,7 @@ await api.StartServiceAsync();
 ### Basic commands
 
 ```csharp
-using Community.Wsa.Sdk.Strategies.Api;
+using Community.Wsa.Sdk;
 
 // Setup
 var api = new WsaApi();
