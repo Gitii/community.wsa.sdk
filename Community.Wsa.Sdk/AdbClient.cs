@@ -12,10 +12,9 @@ namespace Community.Wsa.Sdk;
 /// <inheritdoc />
 public class AdbClient : IAdb
 {
-    private readonly IProcessManager _processManager;
     private readonly IEnvironment _environment;
     private readonly IIo _io;
-    private string? _adbPath = null;
+    private readonly IProcessManager _processManager;
 
     public AdbClient(
         IProcessManager? processManager = null,
@@ -32,36 +31,7 @@ public class AdbClient : IAdb
     public bool IsInstalled => CheckIfAdbIsAvailable();
 
     /// <inheritdoc />
-    public string? PathToAdb => _adbPath;
-
-    private bool CheckIfAdbIsAvailable()
-    {
-        if (_adbPath == null)
-        {
-            var paths = _environment
-                .GetEnvironmentVariable("PATH")
-                .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
-
-            var bestCandidate = FindValidPlatformToolsFolder(paths);
-            _adbPath = bestCandidate == null ? String.Empty : _io.Combine(bestCandidate, "adb.exe");
-        }
-
-        return _adbPath != String.Empty;
-    }
-
-    private string? FindValidPlatformToolsFolder(string[] folderCandidates)
-    {
-        return folderCandidates
-            .Where(_io.DirectoryExists)
-            .Where(HasFiles("adb.exe", "AdbWinApi.dll", "fastboot.exe"))
-            .FirstOrDefault();
-    }
-
-    private Func<string, bool> HasFiles(params string[] fileNames)
-    {
-        return (string directory) =>
-            fileNames.All((fileName) => _io.FileExists(_io.Combine(directory, fileName)));
-    }
+    public string? PathToAdb { get; set; }
 
     /// <inheritdoc />
     public Task InstallPackageAsync(
@@ -79,7 +49,10 @@ public class AdbClient : IAdb
     /// <inheritdoc />
     public Task UninstallPackageAsync(string deviceSerialNumber, string packageName)
     {
-        return ExecuteAdbCommandAsync(new[] { "-s", deviceSerialNumber, "uninstall", packageName });
+        return ExecuteAdbCommandAsync(
+            new[] { "-s", deviceSerialNumber, "uninstall", packageName },
+            outputMustInclude: "Success"
+        );
     }
 
     /// <inheritdoc />
@@ -92,84 +65,19 @@ public class AdbClient : IAdb
         );
     }
 
-    private string GetAddress(EndPoint endPoint)
-    {
-        var str =
-            endPoint.ToString() ?? throw new Exception("Failed to get endpoint representation.");
-
-        var prefix = endPoint.AddressFamily.ToString();
-        if (str.StartsWith(prefix))
-        {
-            return str.Substring(prefix.Length + 1);
-        }
-
-        return str;
-    }
-
     /// <inheritdoc />
     public async Task<KnownDevice[]> ListDevicesAsync()
     {
-        var lines = await ExecuteAdbCommandAsync(new string[] { "devices", "-l" })
+        var lines = await ExecuteAdbCommandAsync(
+                new string[] { "devices", "-l" },
+                outputMustInclude: "List of devices attached"
+            )
             .ConfigureAwait(false);
         return lines
             .Split("\n", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Skip(1)
             .Select(ParseLine)
             .ToArray();
-    }
-
-    private async Task<PackageInfo> GetPackageDumpAsync(
-        string deviceSerialNumber,
-        string packageName
-    )
-    {
-        var dump = await ExecuteAdbCommandAsync(
-                new string[]
-                {
-                    "-s",
-                    deviceSerialNumber,
-                    "shell",
-                    "dumpsys",
-                    "package",
-                    packageName
-                },
-                outputMustNotInclude: $"Unable to find package: {packageName}"
-            )
-            .ConfigureAwait(false);
-
-        return new PackageInfo()
-        {
-            PackageName = packageName,
-            DisplayName = String.Empty,
-            VersionCode = ExtractValue("versionCode="),
-            DisplayVersion = ExtractValue("versionName="),
-            DisplayIcon = Array.Empty<byte>(),
-            Publisher = String.Empty,
-            InstallDate = DateOnly.ParseExact(ExtractValue("firstInstallTime="), "yyyy-MM-dd"),
-        };
-
-        string ExtractValue(string key)
-        {
-            var index = dump.IndexOf(key, StringComparison.Ordinal);
-            if (index < 0)
-            {
-                throw new Exception(
-                    $"Failed to find key {key} in dump of {packageName} on device {deviceSerialNumber}"
-                );
-            }
-
-            var valueStartIndex = index + key.Length;
-            var valueEndIndex = dump.IndexOf(" ", valueStartIndex, StringComparison.Ordinal);
-
-            if (valueEndIndex < 0)
-            {
-                throw new Exception(
-                    $"Failed to end of value for key {key} in dump of {packageName} on device {deviceSerialNumber}"
-                );
-            }
-
-            return dump.Substring(valueStartIndex, valueEndIndex - valueStartIndex);
-        }
     }
 
     /// <inheritdoc />
@@ -234,6 +142,104 @@ public class AdbClient : IAdb
         );
     }
 
+    private bool CheckIfAdbIsAvailable()
+    {
+        if (PathToAdb == null)
+        {
+            var paths = _environment
+                .GetEnvironmentVariable("PATH")
+                .Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+
+            var bestCandidate = FindValidPlatformToolsFolder(paths);
+            PathToAdb =
+                bestCandidate == null ? String.Empty : _io.Combine(bestCandidate, "adb.exe");
+        }
+
+        return PathToAdb != String.Empty;
+    }
+
+    private string? FindValidPlatformToolsFolder(string[] folderCandidates)
+    {
+        return folderCandidates
+            .Where(_io.DirectoryExists)
+            .Where(HasFiles("adb.exe", "AdbWinApi.dll", "fastboot.exe"))
+            .FirstOrDefault();
+    }
+
+    private Func<string, bool> HasFiles(params string[] fileNames)
+    {
+        return (string directory) =>
+            fileNames.All((fileName) => _io.FileExists(_io.Combine(directory, fileName)));
+    }
+
+    private string GetAddress(EndPoint endPoint)
+    {
+        var str =
+            endPoint.ToString() ?? throw new Exception("Failed to get endpoint representation.");
+
+        var prefix = endPoint.AddressFamily.ToString();
+        if (str.StartsWith(prefix))
+        {
+            return str.Substring(prefix.Length + 1);
+        }
+
+        return str;
+    }
+
+    private async Task<PackageInfo> GetPackageDumpAsync(
+        string deviceSerialNumber,
+        string packageName
+    )
+    {
+        var dump = await ExecuteAdbCommandAsync(
+                new string[]
+                {
+                    "-s",
+                    deviceSerialNumber,
+                    "shell",
+                    "dumpsys",
+                    "package",
+                    packageName
+                },
+                outputMustNotInclude: $"Unable to find package: {packageName}"
+            )
+            .ConfigureAwait(false);
+
+        return new PackageInfo()
+        {
+            PackageName = packageName,
+            DisplayName = String.Empty,
+            VersionCode = ExtractValue("versionCode="),
+            DisplayVersion = ExtractValue("versionName="),
+            DisplayIcon = Array.Empty<byte>(),
+            Publisher = String.Empty,
+            InstallDate = DateOnly.ParseExact(ExtractValue("firstInstallTime="), "yyyy-MM-dd"),
+        };
+
+        string ExtractValue(string key)
+        {
+            var index = dump.IndexOf(key, StringComparison.Ordinal);
+            if (index < 0)
+            {
+                throw new Exception(
+                    $"Failed to find key {key} in dump of {packageName} on device {deviceSerialNumber}"
+                );
+            }
+
+            var valueStartIndex = index + key.Length;
+            var valueEndIndex = dump.IndexOf(" ", valueStartIndex, StringComparison.Ordinal);
+
+            if (valueEndIndex < 0)
+            {
+                throw new Exception(
+                    $"Failed to end of value for key {key} in dump of {packageName} on device {deviceSerialNumber}"
+                );
+            }
+
+            return dump.Substring(valueStartIndex, valueEndIndex - valueStartIndex);
+        }
+    }
+
     private KnownDevice ParseLine(string line)
     {
         var parts = line.Split(
@@ -290,7 +296,7 @@ public class AdbClient : IAdb
             throw new AdbException(AdbError.AdbIsNotInstalled);
         }
 
-        var startInfo = new ProcessStartInfo(_adbPath!)
+        var startInfo = new ProcessStartInfo(PathToAdb!)
         {
             RedirectStandardOutput = true,
             CreateNoWindow = true
@@ -330,7 +336,7 @@ public class AdbClient : IAdb
             && !stdOut.Contains(outputMustInclude, StringComparison.OrdinalIgnoreCase)
         )
         {
-            throw new AdbException(AdbError.CommandFailed, strCommand, stdOut);
+            throw new AdbException(AdbError.CommandFinishedWithInvalidOutput, strCommand, stdOut);
         }
 
         if (
@@ -338,7 +344,7 @@ public class AdbClient : IAdb
             && stdOut.Contains(outputMustNotInclude, StringComparison.OrdinalIgnoreCase)
         )
         {
-            throw new AdbException(AdbError.CommandFailed, strCommand, stdOut);
+            throw new AdbException(AdbError.CommandFinishedWithInvalidOutput, strCommand, stdOut);
         }
 
         return stdOut;

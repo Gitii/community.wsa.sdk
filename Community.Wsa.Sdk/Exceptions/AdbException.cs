@@ -55,11 +55,13 @@ public class AdbException : Exception
         switch (error)
         {
             case AdbError.AdbIsNotInstalled:
-                return "Platform tools (which contains Adb executable) are not installed";
+                return "Platform tools (which contains Adb executable) are not installed.";
             case AdbError.CannotStartAdb:
-                return "Adb executable cannot be started by the system";
+                return "Adb executable cannot be started by the system.";
             case AdbError.CommandFailed:
                 return "Adb command could be started but the exit code wasn't zero.";
+            case AdbError.CommandFinishedWithInvalidOutput:
+                return "Adb command could be started and has finished but the output is invalid.";
             case AdbError.CommandTimedOut:
                 return "Adb command has been started but timeout.";
             default:

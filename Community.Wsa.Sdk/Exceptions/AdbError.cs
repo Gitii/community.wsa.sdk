@@ -21,6 +21,11 @@ public enum AdbError
     CommandFailed,
 
     /// <summary>
+    /// Indicates that the adb command could be started but the actual output hasn't matched the expected output.
+    /// </summary>
+    CommandFinishedWithInvalidOutput,
+
+    /// <summary>
     /// Indicates that the adb command could be started successfully but took to long to complete.
     /// </summary>
     CommandTimedOut
