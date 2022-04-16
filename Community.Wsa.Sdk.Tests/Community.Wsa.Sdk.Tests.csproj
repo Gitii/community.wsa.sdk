@@ -21,7 +21,7 @@
     <PackageReference Include="coverlet.collector" Version="3.1.0" />
   </ItemGroup>
 
-  <ItemGroup>
+    <ItemGroup>
     <ProjectReference Include="..\Community.Wsa.Sdk\Community.Wsa.Sdk.csproj" />
   </ItemGroup>
 

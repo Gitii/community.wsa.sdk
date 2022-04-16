@@ -594,4 +594,53 @@ firstInstallTime=2022-01-01
 
         A.CallTo(() => pm.Start(A<ProcessStartInfo>._)).MustHaveHappened();
     }
+
+    [Test]
+    public async Task DisconnectAsync_ShouldFailBecauseCannotDisconnected()
+    {
+        await AssertExecutionFailsWith<AdbException>(
+            "foobar",
+            (adb) => adb.DisconnectAsync(new DnsEndPoint("host", 1)),
+            new string[] { "disconnect", "host:1" },
+            "Adb command could be started and has finished but the output is invalid.\nCommand: adb disconnect host:1\nfoobar"
+        );
+    }
+
+    [Test]
+    public async Task DisconnectAsync_ShouldDisconnect()
+    {
+        await AssertExecutedWith(
+            "disconnected host:1",
+            (adb) => adb.DisconnectAsync(new DnsEndPoint("host", 1)),
+            "disconnect",
+            "host:1"
+        );
+    }
+
+    [Test]
+    public async Task LaunchPackageAsync_ShouldFailBecauseCannotLaunch()
+    {
+        await AssertExecutionFailsWith<AdbException>(
+            "foobar",
+            (adb) => adb.LaunchPackageAsync("sn1", "app-a"),
+            new string[] { "-s", "sn1", "shell", "monkey", "-p", "app-a", "1" },
+            "Adb command could be started and has finished but the output is invalid.\nCommand: adb -s sn1 shell monkey -p app-a 1\nfoobar"
+        );
+    }
+
+    [Test]
+    public async Task LaunchPackageAsync_ShouldLaunch()
+    {
+        await AssertExecutedWith(
+            "Events injected: 1",
+            (adb) => adb.LaunchPackageAsync("sn1", "app-a"),
+            "-s",
+            "sn1",
+            "shell",
+            "monkey",
+            "-p",
+            "app-a",
+            "1"
+        );
+    }
 }
