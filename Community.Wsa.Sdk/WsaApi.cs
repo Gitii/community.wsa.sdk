@@ -38,6 +38,12 @@ public class WsaApi : IWsaApi
     }
 
     /// <inheritdoc />
+    public bool IsWsaSupported()
+    {
+        return IsWsaSupported(out _);
+    }
+
+    /// <inheritdoc />
     public bool IsWsaSupported(out string? missingCapabilities)
     {
         missingCapabilities = null;

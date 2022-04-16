@@ -11,10 +11,7 @@ public interface IWsaApi
     /// <summary>
     /// Checks if the environment, you are running in, supports WSA.
     /// </summary>
-    public bool IsWsaSupported()
-    {
-        return IsWsaSupported(out _);
-    }
+    public bool IsWsaSupported();
 
     /// <summary>
     /// Checks if the environment you are running in now supports WSA.
