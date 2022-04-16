@@ -17,6 +17,15 @@ using System.Diagnostics.CodeAnalysis;
     Justification = "Simplify test code, optimizations are not necessary",
     Scope = "module"
 )]
-[assembly:
-    SuppressMessage("AsyncUsage", "AsyncFixer01:Unnecessary async/await usage",
-        Justification = "Simplify test code, optimizations are not necessary", Scope = "module")]
+[assembly: SuppressMessage(
+    "AsyncUsage",
+    "AsyncFixer01:Unnecessary async/await usage",
+    Justification = "Simplify test code, optimizations are not necessary",
+    Scope = "module"
+)]
+[assembly: SuppressMessage(
+    "Design",
+    "MA0051:Method is too long",
+    Justification = "Simplify test code, optimizations are not necessary",
+    Scope = "module"
+)]

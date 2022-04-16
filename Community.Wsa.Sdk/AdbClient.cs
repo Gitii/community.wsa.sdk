@@ -100,7 +100,8 @@ public class AdbClient : IAdb
             }
 
             packages.Add(
-                await GetPackageDumpAsync(deviceSerialNumber, packageName).ConfigureAwait(false)
+                await GetPackageDumpAsync(deviceSerialNumber, packageName.Substring(PACKAGE_PREFIX.Length))
+                    .ConfigureAwait(false)
             );
         }
 
@@ -117,7 +118,7 @@ public class AdbClient : IAdb
         {
             return await GetPackageDumpAsync(deviceSerialNumber, packageName).ConfigureAwait(false);
         }
-        catch (AdbException e) when (e.Error == AdbError.CommandFailed)
+        catch (AdbException e) when (e.Error == AdbError.CommandFinishedWithInvalidOutput)
         {
             return null;
         }
@@ -192,15 +193,7 @@ public class AdbClient : IAdb
     )
     {
         var dump = await ExecuteAdbCommandAsync(
-                new string[]
-                {
-                    "-s",
-                    deviceSerialNumber,
-                    "shell",
-                    "dumpsys",
-                    "package",
-                    packageName
-                },
+                new string[] { "-s", deviceSerialNumber, "shell", "dumpsys", "package", packageName },
                 outputMustNotInclude: $"Unable to find package: {packageName}"
             )
             .ConfigureAwait(false);
@@ -231,9 +224,14 @@ public class AdbClient : IAdb
 
             if (valueEndIndex < 0)
             {
-                throw new Exception(
-                    $"Failed to end of value for key {key} in dump of {packageName} on device {deviceSerialNumber}"
-                );
+                valueEndIndex = dump.IndexOf("\n", valueStartIndex, StringComparison.Ordinal);
+
+                if (valueEndIndex < 0)
+                {
+                    throw new Exception(
+                        $"Failed to end of value for key {key} in dump of {packageName} on device {deviceSerialNumber}"
+                    );
+                }
             }
 
             return dump.Substring(valueStartIndex, valueEndIndex - valueStartIndex);
@@ -263,10 +261,10 @@ public class AdbClient : IAdb
 
         string FindProperty(string prefix)
         {
-            return parts?.FirstOrDefault((prop) => prop.StartsWith(prefix + ":"))?.Remove(
-                    0,
-                    prefix.Length + 1
-                ) ?? string.Empty;
+            return parts.FirstOrDefault((prop) => prop.StartsWith(prefix + ":"))?.Remove(
+                0,
+                prefix.Length + 1
+            ) ?? string.Empty;
         }
 
         DeviceType ParseDeviceType(string rawDeviceType)
@@ -277,15 +275,15 @@ public class AdbClient : IAdb
                 "device" => DeviceType.Device,
                 "emulator" => DeviceType.Emulator,
                 _
-                  => throw new ArgumentOutOfRangeException(
-                      rawDeviceType,
-                      $"Device type '{rawDeviceType}' is unknown!"
-                  ),
+                    => throw new ArgumentOutOfRangeException(
+                        rawDeviceType,
+                        $"Device type '{rawDeviceType}' is unknown!"
+                    ),
             };
         }
     }
 
-    private async Task<string> ExecuteAdbCommandAsync(
+    internal virtual async Task<string> ExecuteAdbCommandAsync(
         string[] arguments,
         string? outputMustInclude = null,
         string? outputMustNotInclude = null
@@ -296,11 +294,7 @@ public class AdbClient : IAdb
             throw new AdbException(AdbError.AdbIsNotInstalled);
         }
 
-        var startInfo = new ProcessStartInfo(PathToAdb!)
-        {
-            RedirectStandardOutput = true,
-            CreateNoWindow = true
-        };
+        var startInfo = new ProcessStartInfo(PathToAdb!) { RedirectStandardOutput = true, CreateNoWindow = true };
         var strCommand = $"adb {string.Join(" ", arguments)}";
 
         foreach (var argument in arguments.Where((s) => s.Length > 0))
