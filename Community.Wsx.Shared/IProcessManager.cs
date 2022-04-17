@@ -16,7 +16,7 @@ public interface IProcessManager
     public abstract IProcess? Start(ProcessStartInfo startInfo);
 
     /// <summary>
-    /// Find and returns the first process of that program (identified by <see cref="programName"/>).
+    /// Find and returns the first process of that program (identified by <paramref cref="programName"/>).
     /// </summary>
     public IProcess? Find(string programName);
 }

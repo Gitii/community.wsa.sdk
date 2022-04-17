@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 
-namespace Community.Wsa.Sdk.Strategies.Api;
+namespace Community.Wsa.Sdk;
 
 /// <summary>
 /// Provides functionality to help you call WSA from .NET applications.
@@ -12,14 +11,11 @@ public interface IWsaApi
     /// <summary>
     /// Checks if the environment, you are running in, supports WSA.
     /// </summary>
-    public bool IsWsaSupported()
-    {
-        return IsWsaSupported(out _);
-    }
+    public bool IsWsaSupported();
 
     /// <summary>
     /// Checks if the environment you are running in now supports WSA.
-    /// The error message is returned as out parameter. If wsl is supported, <paramref name="missingCapabilities"/> is <c>null</c>.
+    /// The error message is returned as out parameter. If WSA is supported, <paramref name="missingCapabilities"/> is <c>null</c>.
     /// </summary>
     public bool IsWsaSupported(out string? missingCapabilities);
 
@@ -44,9 +40,36 @@ public interface IWsaApi
     /// </summary>
     public Task StartServiceAsync();
 
+    /// <summary>
+    /// Returns the device serial number of the WSA device.
+    /// Will fail if the service is not running or adb is not connected.
+    /// Use <see cref="EnsureWsaIsReadyAsync"/> to prepare wsa beforehand.
+    /// </summary>
+    /// <returns>The serial number of the wsa device.</returns>
+    public Task<string> GetDeviceIdAsync();
+
+    /// <summary>
+    /// The most-common device serial number of the wsa device.
+    /// </summary>
     public const string ADB_WSA_DEVICE_SERIAL_NUMBER = "localhost:58526";
+
+    /// <summary>
+    /// The mutex identifier of wsaclient.
+    /// </summary>
     public const string WSA_MUTEX = "{42CEB0DF-325A-4FBE-BBB6-C259A6C3F0BB}";
+
+    /// <summary>
+    /// The host name of the wsa device (when developer options are enabled).
+    /// </summary>
     public const string WSA_HOST_NAME = "localhost";
+
+    /// <summary>
+    /// The port of the wsa device (when developer options are enabled).
+    /// </summary>
     public const int WSA_PORT = 58526;
+
+    /// <summary>
+    /// The model number of the wsa device.
+    /// </summary>
     public const string WSA_MODEL_NUMBER = "Subsystem_for_Android_TM_";
 }

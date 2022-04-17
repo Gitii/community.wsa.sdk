@@ -76,7 +76,6 @@ dotnet_diagnostic.CA1823.severity=error
 dotnet_diagnostic.CA1836.severity=error
 dotnet_style_namespace_match_folder=true:error
 dotnet_style_allow_multiple_blank_lines_experimental=true:error
-dotnet_diagnostic.VSTHRD111.severity=error
 ###############################
 # C# Coding Conventions       #
 ###############################
@@ -155,7 +154,7 @@ dotnet_diagnostic.VSTHRD200.severity = error
 dotnet_diagnostic.MA0048.severity = error
 
 # MA0004: Use Task.ConfigureAwait(false)
-dotnet_diagnostic.MA0004.severity =silent
+dotnet_diagnostic.MA0004.severity = error
 
 # CS8618: Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 dotnet_diagnostic.CS8618.severity = error

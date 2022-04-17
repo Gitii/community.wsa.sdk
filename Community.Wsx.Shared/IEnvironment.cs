@@ -1,7 +1,6 @@
-﻿using System;
+﻿namespace Community.Wsx.Shared;
 
-namespace Community.Wsx.Shared;
-
+/// <inheritdoc cref="Environment"/>
 public interface IEnvironment
 {
     /// <inheritdoc cref="Environment.Is64BitOperatingSystem"/>

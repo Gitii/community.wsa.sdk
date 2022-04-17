@@ -1,7 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
-        <TargetFrameworks>net6.0-windows10.0.19041.0</TargetFrameworks>
+        <TargetFrameworks>net5.0-windows10.0.19041.0;net6.0-windows10.0.19041.0</TargetFrameworks>
         <SupportedOSPlatform>windows</SupportedOSPlatform>
         <Description>SDK for Windows Subsystem for Android for .Net 6</Description>
         <Copyright>(c) 2022 Gitii</Copyright>
@@ -12,7 +11,6 @@
         <RepositoryType>Git</RepositoryType>
         <PackageTags>WSA,SDK</PackageTags>
         <Nullable>enable</Nullable>
-        <LangVersion>10.0</LangVersion>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Authors>Gitii</Authors>
@@ -20,12 +18,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="System.Drawing.Common" Version="7.0.0-preview.1.22076.8" />
-      <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" />
+        <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Community.Wsx.Shared\Community.Wsx.Shared.csproj" />
+        <ProjectReference Include="..\Community.Wsx.Shared\Community.Wsx.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup Condition="$(TargetFramework) == 'net5.0-windows10.0.19041.0'">
+        <PackageReference Include="Portable.System.DateTimeOnly" Version="6.0.1" />
     </ItemGroup>
 
     <ItemGroup>
@@ -33,5 +35,4 @@
             <_Parameter1>Community.Wsa.Sdk.Tests</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
-
 </Project>

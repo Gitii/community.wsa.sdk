@@ -1,4 +1,4 @@
-﻿namespace Community.Wsa.Sdk.Strategies.Api;
+﻿namespace Community.Wsa.Sdk;
 
 /// <summary>
 /// Describes a device known by adb.

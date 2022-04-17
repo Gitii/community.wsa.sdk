@@ -1,12 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>net6.0-windows</TargetFrameworks>
+        <TargetFrameworks>net5.0-windows;net6.0-windows</TargetFrameworks>
         <SupportedOSPlatform>windows</SupportedOSPlatform>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <LangVersion>10.0</LangVersion>
+        <IsPackable>true</IsPackable>
+
+        <Description>Shared library for SDKs for Windows Subsystem for Android and Linux</Description>
+        <Copyright>(c) 2022 Gitii</Copyright>
+        <PackageProjectUrl>https://github.com/Gitii/community.wsa.sdk</PackageProjectUrl>
+        <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+        <RepositoryUrl>https://github.com/Gitii/community.wsa.sdk.git</RepositoryUrl>
+        <RepositoryType>Git</RepositoryType>
+        <PackageTags>WSL,WSA,SDK</PackageTags>
+        <GenerateDocumentationFile>True</GenerateDocumentationFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Authors>Gitii</Authors>
+        <Company />
     </PropertyGroup>
+
+    <ItemGroup Condition="$(TargetFramework) == 'net5.0-windows'">
+        <PackageReference Include="Portable.System.DateTimeOnly" Version="6.0.1" />
+    </ItemGroup>
 
     <ItemGroup>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
@@ -15,5 +31,10 @@
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
             <_Parameter1>Community.Wsl.Sdk</_Parameter1>
         </AssemblyAttribute>
+        <AssemblyAttribute Include="System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     </ItemGroup>
 </Project>

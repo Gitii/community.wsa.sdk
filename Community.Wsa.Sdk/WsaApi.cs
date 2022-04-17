@@ -9,11 +9,9 @@ using System.Threading.Tasks;
 using Community.Wsa.Sdk.Exceptions;
 using Community.Wsx.Shared;
 
-namespace Community.Wsa.Sdk.Strategies.Api;
+namespace Community.Wsa.Sdk;
 
-/// <summary>
-/// <inheritdoc cref="IWsaApi"/>
-/// </summary>
+/// <inheritdoc />
 public class WsaApi : IWsaApi
 {
     private readonly IIo _io;
@@ -22,9 +20,6 @@ public class WsaApi : IWsaApi
     private readonly IAdb _adb;
     private readonly IProcessManager _processManager;
 
-    /// <summary>
-    /// <inheritdoc cref="IWsaApi"/>
-    /// </summary>
     public WsaApi(
         IAdb? adb = null,
         IWsaClient? wsaClient = null,
@@ -42,9 +37,13 @@ public class WsaApi : IWsaApi
         IsWsaInstalled = _wsaClient.IsWsaInstalled;
     }
 
-    /// <summary>
-    /// <inheritdoc cref="IWsaApi.IsWsaSupported(out string?)"/>
-    /// </summary>
+    /// <inheritdoc />
+    public bool IsWsaSupported()
+    {
+        return IsWsaSupported(out _);
+    }
+
+    /// <inheritdoc />
     public bool IsWsaSupported(out string? missingCapabilities)
     {
         missingCapabilities = null;
@@ -83,6 +82,7 @@ public class WsaApi : IWsaApi
         return true;
     }
 
+    /// <inheritdoc />
     public bool IsRunning
     {
         get
@@ -99,8 +99,10 @@ public class WsaApi : IWsaApi
         }
     }
 
+    /// <inheritdoc />
     public bool IsWsaInstalled { get; }
 
+    /// <inheritdoc />
     public async Task EnsureWsaIsReadyAsync(IProgress<string>? progress = null)
     {
         if (!IsRunning)
@@ -112,9 +114,7 @@ public class WsaApi : IWsaApi
 
         progress?.Report("Connecting to Windows Subsystem for Android...");
         await EnsureWsaIsConnectedAsync(progress).ConfigureAwait(false);
-        await _adb.ConnectAsync(
-                new DnsEndPoint(IWsaApi.WSA_HOST_NAME, IWsaApi.WSA_PORT)
-            )
+        await _adb.ConnectAsync(new DnsEndPoint(IWsaApi.WSA_HOST_NAME, IWsaApi.WSA_PORT))
             .ConfigureAwait(false);
     }
 
@@ -122,7 +122,11 @@ public class WsaApi : IWsaApi
     {
         bool connected = false;
         bool triedToConnect = false;
-        var endPoint = new DnsEndPoint(IWsaApi.WSA_HOST_NAME, IWsaApi.WSA_PORT, AddressFamily.InterNetwork);
+        var endPoint = new DnsEndPoint(
+            IWsaApi.WSA_HOST_NAME,
+            IWsaApi.WSA_PORT,
+            AddressFamily.InterNetwork
+        );
 
         do
         {
@@ -161,10 +165,7 @@ public class WsaApi : IWsaApi
     {
         return devices.FirstOrDefault(
             (d) =>
-                d.ModelNumber.Equals(
-                    IWsaApi.WSA_MODEL_NUMBER,
-                    StringComparison.OrdinalIgnoreCase
-                )
+                d.ModelNumber.Equals(IWsaApi.WSA_MODEL_NUMBER, StringComparison.OrdinalIgnoreCase)
         );
     }
 
@@ -197,6 +198,7 @@ public class WsaApi : IWsaApi
         }
     }
 
+    /// <inheritdoc />
     public async Task StartServiceAsync()
     {
         try
@@ -215,6 +217,20 @@ public class WsaApi : IWsaApi
         {
             throw new ServiceException(ServiceError.CannotStartService, e);
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<string> GetDeviceIdAsync()
+    {
+        var devices = await _adb.ListDevicesAsync().ConfigureAwait(false);
+        var wsa = FindWsaDevice(devices);
+
+        if (wsa.Equals(default(KnownDevice)))
+        {
+            throw new ServiceException(ServiceError.CannotConnectToDevice);
+        }
+
+        return wsa.DeviceSerialNumber;
     }
 
     private Task EnsureThatWsaClientIsRunningAsync()

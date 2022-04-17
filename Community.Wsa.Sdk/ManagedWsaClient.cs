@@ -6,41 +6,40 @@ using System.Threading.Tasks;
 using Windows.ApplicationModel;
 using Community.Wsx.Shared;
 
-namespace Community.Wsa.Sdk.Strategies.Api;
+namespace Community.Wsa.Sdk;
 
+/// <inheritdoc />
 public class ManagedWsaClient : IWsaClient
 {
     private readonly IEnvironment _environment;
     private readonly IIo _io;
     private readonly IProcessManager _processManager;
+    private readonly IUwpPackageManager _uwpPackageManager;
 
     public ManagedWsaClient(
         IEnvironment? environment = null,
         IIo? io = null,
-        IProcessManager? processManager = null
+        IProcessManager? processManager = null,
+        IUwpPackageManager? uwpPackageManager = null
     )
     {
         _environment = environment ?? new Win32Environment();
         _io = io ?? new Win32IO();
         _processManager = processManager ?? new Win32ProcessManager();
+        _uwpPackageManager = uwpPackageManager ?? new UwpPackageManager();
     }
 
     private string _programFilePath = String.Empty;
 
-    private static Package? GetWsaPackage()
+    private IUwpPackage? GetWsaPackage()
     {
-        Windows.Management.Deployment.PackageManager packageManager =
-            new Windows.Management.Deployment.PackageManager();
-
-        var packages = packageManager.FindPackagesForUser(
-            String.Empty,
+        return _uwpPackageManager.FindPackage(
             "MicrosoftCorporationII.WindowsSubsystemForAndroid",
             "CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
         );
-
-        return packages.SingleOrDefault();
     }
 
+    /// <inheritdoc />
     public string ProgramFilePath
     {
         get
@@ -61,7 +60,7 @@ public class ManagedWsaClient : IWsaClient
                     localAppDataDirectory,
                     "Microsoft",
                     "WindowsApps",
-                    wsaPackage.Id.FamilyName,
+                    wsaPackage.FamilyName,
                     "WsaClient.exe"
                 );
 
@@ -78,32 +77,31 @@ public class ManagedWsaClient : IWsaClient
         }
     }
 
+    /// <inheritdoc />
     public bool IsWsaInstalled
     {
         get { return GetWsaPackage() != null; }
     }
 
+    /// <inheritdoc />
     public Task LaunchAsync(string packageName)
     {
         return ExecuteAsync("launch", $"wsa://{packageName}");
     }
 
-    public async Task LaunchWsaSettingsAsync()
+    /// <inheritdoc />
+    public Task LaunchWsaSettingsAsync()
     {
-        var entries = await GetWsaPackage()?.GetAppListEntriesAsync();
-        var appEntry = entries.FirstOrDefault();
-
-        if (appEntry != null)
-        {
-            await appEntry.LaunchAsync();
-        }
+        return GetWsaPackage()?.LaunchAsync() ?? Task.CompletedTask;
     }
 
+    /// <inheritdoc />
     public Task UninstallAsync(string packageName)
     {
         return ExecuteAsync("/uninstall", packageName);
     }
 
+    /// <inheritdoc />
     public Task LaunchDeepLinkAsync(string link)
     {
         return ExecuteAsync("/deeplink", link);
@@ -111,10 +109,12 @@ public class ManagedWsaClient : IWsaClient
 
     private async Task ExecuteAsync(params string[] args)
     {
-        var startInfo = new ProcessStartInfo { CreateNoWindow = false, FileName = "cmd.exe" };
+        var startInfo = new ProcessStartInfo { CreateNoWindow = false, FileName = ProgramFilePath };
 
-        startInfo.ArgumentList.Add("/K");
-        startInfo.ArgumentList.Add(string.Join(" ", (new string[] { ProgramFilePath }).Concat(args)));
+        foreach (var arg in args)
+        {
+            startInfo.ArgumentList.Add(arg);
+        }
 
         var process = _processManager.Start(startInfo);
 
