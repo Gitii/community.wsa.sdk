@@ -236,18 +236,13 @@ public class AdbClient : IAdb
             }
 
             var valueStartIndex = index + key.Length;
-            var valueEndIndex = dump.IndexOf(" ", valueStartIndex, StringComparison.Ordinal);
+            var valueEndIndex = dump.FindIndex(Char.IsWhiteSpace, valueStartIndex);
 
             if (valueEndIndex < 0)
             {
-                valueEndIndex = dump.IndexOf("\n", valueStartIndex, StringComparison.Ordinal);
-
-                if (valueEndIndex < 0)
-                {
-                    throw new Exception(
-                        $"Failed to end of value for key {key} in dump of {packageName} on device {deviceSerialNumber}"
-                    );
-                }
+                throw new Exception(
+                    $"Failed to end of value for key {key} in dump of {packageName} on device {deviceSerialNumber}"
+                );
             }
 
             return dump.Substring(valueStartIndex, valueEndIndex - valueStartIndex);
