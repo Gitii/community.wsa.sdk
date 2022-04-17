@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -217,7 +218,11 @@ public class AdbClient : IAdb
             DisplayVersion = ExtractValue("versionName="),
             DisplayIcon = Array.Empty<byte>(),
             Publisher = String.Empty,
-            InstallDate = DateOnly.ParseExact(ExtractValue("firstInstallTime="), "yyyy-MM-dd"),
+            InstallDate = DateOnly.ParseExact(
+                ExtractValue("firstInstallTime="),
+                "yyyy-MM-dd",
+                CultureInfo.InvariantCulture
+            ),
         };
 
         string ExtractValue(string key)
@@ -272,9 +277,11 @@ public class AdbClient : IAdb
 
         string FindProperty(string prefix)
         {
-            return parts.FirstOrDefault(
-                    (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
-                )?.Remove(0, prefix.Length + 1) ?? string.Empty;
+            return parts
+                    .FirstOrDefault(
+                        (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
+                    )
+                    ?.Remove(0, prefix.Length + 1) ?? string.Empty;
         }
 
         DeviceType ParseDeviceType(string rawDeviceType)
