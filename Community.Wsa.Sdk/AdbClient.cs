@@ -103,7 +103,7 @@ public class AdbClient : IAdb
             packages.Add(
                 await GetPackageDumpAsync(
                         deviceSerialNumber,
-                        packageName.Substring(PACKAGE_PREFIX.Length)
+                        packageName.Substring(PACKAGE_PREFIX.Length).Trim()
                     )
                     .ConfigureAwait(false)
             );
