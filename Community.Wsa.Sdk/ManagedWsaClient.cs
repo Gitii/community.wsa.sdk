@@ -92,7 +92,7 @@ public class ManagedWsaClient : IWsaClient
     /// <inheritdoc />
     public Task LaunchWsaSettingsAsync()
     {
-        return GetWsaPackage()?.Launch() ?? Task.CompletedTask;
+        return GetWsaPackage()?.LaunchAsync() ?? Task.CompletedTask;
     }
 
     /// <inheritdoc />

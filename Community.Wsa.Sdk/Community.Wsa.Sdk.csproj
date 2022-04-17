@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>net5.0-windows10.0.19041.0;net6.0-windows10.0.19041.0</TargetFrameworks>
         <SupportedOSPlatform>windows</SupportedOSPlatform>
@@ -19,12 +18,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
-      <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" />
+        <PackageReference Include="System.Drawing.Common" Version="6.0.0" />
+        <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" />
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Community.Wsx.Shared\Community.Wsx.Shared.csproj" />
+        <ProjectReference Include="..\Community.Wsx.Shared\Community.Wsx.Shared.csproj" />
     </ItemGroup>
 
     <ItemGroup Condition="$(TargetFramework) == 'net5.0-windows10.0.19041.0'">
@@ -36,5 +35,4 @@
             <_Parameter1>Community.Wsa.Sdk.Tests</_Parameter1>
         </AssemblyAttribute>
     </ItemGroup>
-
 </Project>

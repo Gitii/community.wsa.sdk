@@ -94,13 +94,16 @@ public class AdbClient : IAdb
         foreach (var packageName in packageNames)
         {
             const string PACKAGE_PREFIX = "package:";
-            if (!packageName.StartsWith(PACKAGE_PREFIX))
+            if (!packageName.StartsWith(PACKAGE_PREFIX, StringComparison.Ordinal))
             {
                 continue;
             }
 
             packages.Add(
-                await GetPackageDumpAsync(deviceSerialNumber, packageName.Substring(PACKAGE_PREFIX.Length))
+                await GetPackageDumpAsync(
+                        deviceSerialNumber,
+                        packageName.Substring(PACKAGE_PREFIX.Length)
+                    )
                     .ConfigureAwait(false)
             );
         }
@@ -179,7 +182,7 @@ public class AdbClient : IAdb
             endPoint.ToString() ?? throw new Exception("Failed to get endpoint representation.");
 
         var prefix = endPoint.AddressFamily.ToString();
-        if (str.StartsWith(prefix))
+        if (str.StartsWith(prefix, StringComparison.Ordinal))
         {
             return str.Substring(prefix.Length + 1);
         }
@@ -193,7 +196,15 @@ public class AdbClient : IAdb
     )
     {
         var dump = await ExecuteAdbCommandAsync(
-                new string[] { "-s", deviceSerialNumber, "shell", "dumpsys", "package", packageName },
+                new string[]
+                {
+                    "-s",
+                    deviceSerialNumber,
+                    "shell",
+                    "dumpsys",
+                    "package",
+                    packageName
+                },
                 outputMustNotInclude: $"Unable to find package: {packageName}"
             )
             .ConfigureAwait(false);
@@ -261,10 +272,9 @@ public class AdbClient : IAdb
 
         string FindProperty(string prefix)
         {
-            return parts.FirstOrDefault((prop) => prop.StartsWith(prefix + ":"))?.Remove(
-                0,
-                prefix.Length + 1
-            ) ?? string.Empty;
+            return parts.FirstOrDefault(
+                    (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
+                )?.Remove(0, prefix.Length + 1) ?? string.Empty;
         }
 
         DeviceType ParseDeviceType(string rawDeviceType)
@@ -275,10 +285,10 @@ public class AdbClient : IAdb
                 "device" => DeviceType.Device,
                 "emulator" => DeviceType.Emulator,
                 _
-                    => throw new ArgumentOutOfRangeException(
-                        rawDeviceType,
-                        $"Device type '{rawDeviceType}' is unknown!"
-                    ),
+                  => throw new ArgumentOutOfRangeException(
+                      rawDeviceType,
+                      $"Device type '{rawDeviceType}' is unknown!"
+                  ),
             };
         }
     }
@@ -294,7 +304,11 @@ public class AdbClient : IAdb
             throw new AdbException(AdbError.AdbIsNotInstalled);
         }
 
-        var startInfo = new ProcessStartInfo(PathToAdb!) { RedirectStandardOutput = true, CreateNoWindow = true };
+        var startInfo = new ProcessStartInfo(PathToAdb!)
+        {
+            RedirectStandardOutput = true,
+            CreateNoWindow = true
+        };
         var strCommand = $"adb {string.Join(" ", arguments)}";
 
         foreach (var argument in arguments.Where((s) => s.Length > 0))

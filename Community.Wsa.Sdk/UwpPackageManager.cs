@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Linq;
+using Windows.Management.Deployment;
 
 namespace Community.Wsa.Sdk;
 
+/// <inheritdoc />
 internal class UwpPackageManager : IUwpPackageManager
 {
     Windows.Management.Deployment.PackageManager packageManager =
         new Windows.Management.Deployment.PackageManager();
 
+    /// <inheritdoc />
     public IUwpPackage? FindPackage(string packageName, string packagePublisher)
     {
         var packages = packageManager.FindPackagesForUser(
@@ -17,11 +20,7 @@ internal class UwpPackageManager : IUwpPackageManager
         );
 
         var package = packages.SingleOrDefault();
-        if (package == null)
-        {
-            return null;
-        }
 
-        return new UwpPackage(package);
+        return package == null ? null : new UwpPackage(package);
     }
 }

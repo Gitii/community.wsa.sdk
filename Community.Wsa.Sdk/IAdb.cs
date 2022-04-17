@@ -57,14 +57,22 @@ public interface IAdb
     Task<PackageInfo[]> GetInstalledPackagesAsync(string deviceSerialNumber);
 
     /// <summary>
-    /// 
+    /// Returns detailed information about an installed package or <c>null</c> if it's not installed.
     /// </summary>
-    /// <param name="deviceSerialNumber"></param>
-    /// <param name="packageName"></param>
-    /// <returns></returns>
+    /// <param name="deviceSerialNumber">The serial number of the device which will be targeted.</param>
+    /// <param name="packageName">The name of the package which details will be returned.</param>
     Task<PackageInfo?> GetInstalledPackageAsync(string deviceSerialNumber, string packageName);
 
+    /// <summary>
+    /// Launches the specified app.
+    /// </summary>
+    /// <param name="deviceSerialNumber">The serial number of the device which will be targeted.</param>
+    /// <param name="packageName">The name of the package which will be launched.</param>
     Task LaunchPackageAsync(string deviceSerialNumber, string packageName);
 
+    /// <summary>
+    /// Disconnects the specified endpoint.
+    /// </summary>
+    /// <param name="endPoint">The endpoint which will be disconnected.</param>
     Task DisconnectAsync(EndPoint endPoint);
 }

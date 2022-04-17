@@ -65,7 +65,7 @@ internal class Win32Process : IProcess
 
             return null;
         }
-        catch (TaskCanceledException e)
+        catch (TaskCanceledException)
         {
             return null;
         }

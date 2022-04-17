@@ -83,7 +83,8 @@ public class WsaPackageManager : IPackageManager
             async () =>
             {
                 using var ico = new System.Drawing.Icon(filePath);
-                await using var buffer = new MemoryStream();
+                var buffer = new MemoryStream();
+                await using var _ = buffer.ConfigureAwait(false);
                 using var icoImage = ico.ToBitmap();
 
                 icoImage.Save(buffer, ImageFormat.Png);
@@ -101,7 +102,7 @@ public class WsaPackageManager : IPackageManager
         {
             var app = installedApps.OpenSubKey(appId);
 
-            if (app.GetSubKeyNames().Contains("AndroidPackageName"))
+            if (app.GetSubKeyNames().Contains("AndroidPackageName", StringComparer.Ordinal))
             {
                 yield return app;
             }
@@ -122,7 +123,7 @@ public class WsaPackageManager : IPackageManager
     {
         using var appsKey = GetInstalledAppsKey();
 
-        if (!appsKey.GetSubKeyNames().Contains(packageName))
+        if (!appsKey.GetSubKeyNames().Contains(packageName, StringComparer.Ordinal))
         {
             return null;
         }
@@ -137,7 +138,9 @@ public class WsaPackageManager : IPackageManager
     {
         using var appsKey = GetInstalledAppsKey();
 
-        return Task.FromResult(appsKey.GetSubKeyNames().Contains(packageName));
+        return Task.FromResult(
+            appsKey.GetSubKeyNames().Contains(packageName, StringComparer.Ordinal)
+        );
     }
 
     /// <inheritdoc />

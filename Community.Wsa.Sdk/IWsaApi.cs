@@ -48,9 +48,28 @@ public interface IWsaApi
     /// <returns>The serial number of the wsa device.</returns>
     public Task<string> GetDeviceIdAsync();
 
+    /// <summary>
+    /// The most-common device serial number of the wsa device.
+    /// </summary>
     public const string ADB_WSA_DEVICE_SERIAL_NUMBER = "localhost:58526";
+
+    /// <summary>
+    /// The mutex identifier of wsaclient.
+    /// </summary>
     public const string WSA_MUTEX = "{42CEB0DF-325A-4FBE-BBB6-C259A6C3F0BB}";
+
+    /// <summary>
+    /// The host name of the wsa device (when developer options are enabled).
+    /// </summary>
     public const string WSA_HOST_NAME = "localhost";
+
+    /// <summary>
+    /// The port of the wsa device (when developer options are enabled).
+    /// </summary>
     public const int WSA_PORT = 58526;
+
+    /// <summary>
+    /// The model number of the wsa device.
+    /// </summary>
     public const string WSA_MODEL_NUMBER = "Subsystem_for_Android_TM_";
 }

@@ -29,3 +29,15 @@ using System.Diagnostics.CodeAnalysis;
     Justification = "Simplify test code, optimizations are not necessary",
     Scope = "module"
 )]
+[assembly: SuppressMessage(
+    "Usage",
+    "VSTHRD105:Avoid method overloads that assume TaskScheduler.Current",
+    Justification = "Simplify test code, optimizations are not necessary",
+    Scope = "module"
+)]
+[assembly: SuppressMessage(
+    "Usage",
+    "MA0004:Use Task.ConfigureAwait(false)",
+    Justification = "Simplify test code, optimizations are not necessary",
+    Scope = "module"
+)]
