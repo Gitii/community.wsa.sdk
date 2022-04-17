@@ -1,12 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <TargetFrameworks>net5.0-windows;net6.0-windows</TargetFrameworks>
         <SupportedOSPlatform>windows</SupportedOSPlatform>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <IsPackable>true</IsPackable>
-
         <Description>Shared library for SDKs for Windows Subsystem for Android and Linux</Description>
         <Copyright>(c) 2022 Gitii</Copyright>
         <PackageProjectUrl>https://github.com/Gitii/community.wsa.sdk</PackageProjectUrl>
@@ -35,6 +33,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
+        <PackageReference Include="Microsoft.Win32.Registry" Version="5.0.0" />
     </ItemGroup>
 </Project>
