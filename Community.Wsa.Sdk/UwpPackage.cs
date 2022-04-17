@@ -14,8 +14,7 @@ internal class UwpPackage : IUwpPackage
         _package = package;
     }
 
-    public string FamilyName =>
-        _package.Id.ToString() ?? throw new Exception("Package doesn't have a family name!");
+    public string FamilyName => _package.Id.FamilyName;
 
     public async Task LaunchAsync()
     {
