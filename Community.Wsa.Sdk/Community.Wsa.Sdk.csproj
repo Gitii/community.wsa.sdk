@@ -11,6 +11,7 @@
         <RepositoryType>Git</RepositoryType>
         <PackageTags>WSA,SDK</PackageTags>
         <Nullable>enable</Nullable>
+        <IsPackable>true</IsPackable>
         <GenerateDocumentationFile>True</GenerateDocumentationFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Authors>Gitii</Authors>
