@@ -45,14 +45,14 @@ jobs:
         uses: irongut/CodeCoverageSummary@v1.2.0
         with:
           filename: CoverageResults/coverage.net6.0-windows10.0.19041.0.cobertura.xml
-          badge: true
+          badge: false
           fail_below_min: true
           format: markdown
           hide_branch_rate: false
           hide_complexity: true
           indicators: true
           output: both
-          thresholds: "53 44"
+          thresholds: "41 29"
       - name: Add Coverage PR Comment
         uses: marocchino/sticky-pull-request-comment@v2
         if: github.event_name == 'pull_request'
