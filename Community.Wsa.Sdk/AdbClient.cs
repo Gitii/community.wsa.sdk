@@ -208,15 +208,7 @@ public class AdbClient : IAdb
     )
     {
         var dump = await ExecuteAdbCommandAsync(
-                new string[]
-                {
-                    "-s",
-                    deviceSerialNumber,
-                    "shell",
-                    "dumpsys",
-                    "package",
-                    packageName
-                },
+                new string[] { "-s", deviceSerialNumber, "shell", "dumpsys", "package", packageName },
                 outputMustNotInclude: $"Unable to find package: {packageName}"
             )
             .ConfigureAwait(false);
@@ -284,10 +276,10 @@ public class AdbClient : IAdb
         string FindProperty(string prefix)
         {
             return parts
-                    .FirstOrDefault(
-                        (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
-                    )
-                    ?.Remove(0, prefix.Length + 1) ?? string.Empty;
+                .FirstOrDefault(
+                    (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
+                )
+                ?.Remove(0, prefix.Length + 1) ?? string.Empty;
         }
 
         DeviceType ParseDeviceType(string rawDeviceType)
@@ -298,10 +290,10 @@ public class AdbClient : IAdb
                 "device" => DeviceType.Device,
                 "emulator" => DeviceType.Emulator,
                 _
-                  => throw new ArgumentOutOfRangeException(
-                      rawDeviceType,
-                      $"Device type '{rawDeviceType}' is unknown!"
-                  ),
+                    => throw new ArgumentOutOfRangeException(
+                        rawDeviceType,
+                        $"Device type '{rawDeviceType}' is unknown!"
+                    ),
             };
         }
     }
@@ -319,8 +311,7 @@ public class AdbClient : IAdb
 
         var startInfo = new ProcessStartInfo(PathToAdb!)
         {
-            RedirectStandardOutput = true,
-            CreateNoWindow = true
+            RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true
         };
         var strCommand = $"adb {string.Join(" ", arguments)}";
 
@@ -333,31 +324,52 @@ public class AdbClient : IAdb
             _processManager.Start(startInfo) ?? throw new AdbException(AdbError.CannotStartAdb);
 
         var stdOutTask = process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+        var stdErrTask = process.StandardError.ReadToEndAsync().ConfigureAwait(false);
 
         var exitCode = await process.WaitForExitAsync(10_000).ConfigureAwait(false);
 
         string stdOut;
+        string stdErr;
 
         if (!exitCode.HasValue)
         {
             process.Kill();
             stdOut = await stdOutTask;
-            throw new AdbException(AdbError.CommandTimedOut, strCommand, stdOut);
+            stdErr = await stdErrTask;
+            throw new AdbException(AdbError.CommandTimedOut, strCommand, stdOut + "\n" + stdErr);
         }
 
         stdOut = await stdOutTask;
+        stdErr = await stdErrTask;
+        var completeOutput = stdOut + "\n" + stdErr;
 
         if (exitCode != 0)
         {
-            throw new AdbException(AdbError.CommandFailed, strCommand, stdOut);
+            throw new AdbException(AdbError.CommandFailed, strCommand, completeOutput);
         }
 
+        ValidateOutput(outputMustInclude, outputMustNotInclude, stdOut, strCommand, completeOutput);
+
+        return stdOut;
+    }
+
+    private static void ValidateOutput(
+        string? outputMustInclude,
+        string? outputMustNotInclude,
+        string stdOut,
+        string strCommand,
+        string completeOutput)
+    {
         if (
             !string.IsNullOrEmpty(outputMustInclude)
             && !stdOut.Contains(outputMustInclude, StringComparison.OrdinalIgnoreCase)
         )
         {
-            throw new AdbException(AdbError.CommandFinishedWithInvalidOutput, strCommand, stdOut);
+            throw new AdbException(
+                AdbError.CommandFinishedWithInvalidOutput,
+                strCommand,
+                completeOutput
+            );
         }
 
         if (
@@ -365,9 +377,11 @@ public class AdbClient : IAdb
             && stdOut.Contains(outputMustNotInclude, StringComparison.OrdinalIgnoreCase)
         )
         {
-            throw new AdbException(AdbError.CommandFinishedWithInvalidOutput, strCommand, stdOut);
+            throw new AdbException(
+                AdbError.CommandFinishedWithInvalidOutput,
+                strCommand,
+                completeOutput
+            );
         }
-
-        return stdOut;
     }
 }
