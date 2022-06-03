@@ -75,4 +75,14 @@ public interface IAdb
     /// </summary>
     /// <param name="endPoint">The endpoint which will be disconnected.</param>
     Task DisconnectAsync(EndPoint endPoint);
+
+    /// <summary>
+    /// Executes the <paramref name="command"/> with zero or more <paramref name="arguments"/>.
+    /// The output on standard output of the command will be returned.
+    /// When the exit code of the executed command is negative, an exception will be thrown.
+    /// </summary>
+    /// <param name="command">The command or name of the executable to execute.</param>
+    /// <param name="arguments">The list of arguments.</param>
+    /// <returns>The output of the executed command.</returns>
+    Task<string> ExecuteCommandAsync(string command, string[] arguments);
 }
