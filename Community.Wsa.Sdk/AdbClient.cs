@@ -147,6 +147,17 @@ public class AdbClient : IAdb
         );
     }
 
+    /// <inheritdoc />
+    public Task<string> ExecuteCommandAsync(string command, string[] arguments)
+    {
+        var adbArguments = new string[arguments.Length + 1];
+        Array.Copy(arguments, 0, adbArguments, 1, arguments.Length);
+
+        adbArguments[0] = "shell";
+
+        return ExecuteAdbCommandAsync(adbArguments);
+    }
+
     private bool CheckIfAdbIsAvailable()
     {
         if (PathToAdb == null)
