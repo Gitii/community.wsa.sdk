@@ -148,12 +148,13 @@ public class AdbClient : IAdb
     }
 
     /// <inheritdoc />
-    public Task<string> ExecuteCommandAsync(string command, string[] arguments)
+    public Task<string> ExecuteCommandAsync(string command, params string[] arguments)
     {
-        var adbArguments = new string[arguments.Length + 1];
-        Array.Copy(arguments, 0, adbArguments, 1, arguments.Length);
+        var adbArguments = new string[arguments.Length + 2];
+        Array.Copy(arguments, 0, adbArguments, 2, arguments.Length);
 
         adbArguments[0] = "shell";
+        adbArguments[1] = command;
 
         return ExecuteAdbCommandAsync(adbArguments);
     }
@@ -320,6 +321,7 @@ public class AdbClient : IAdb
         var startInfo = new ProcessStartInfo(PathToAdb!)
         {
             RedirectStandardOutput = true,
+            RedirectStandardError = true,
             CreateNoWindow = true
         };
         var strCommand = $"adb {string.Join(" ", arguments)}";
@@ -333,31 +335,53 @@ public class AdbClient : IAdb
             _processManager.Start(startInfo) ?? throw new AdbException(AdbError.CannotStartAdb);
 
         var stdOutTask = process.StandardOutput.ReadToEndAsync().ConfigureAwait(false);
+        var stdErrTask = process.StandardError.ReadToEndAsync().ConfigureAwait(false);
 
         var exitCode = await process.WaitForExitAsync(10_000).ConfigureAwait(false);
 
         string stdOut;
+        string stdErr;
 
         if (!exitCode.HasValue)
         {
             process.Kill();
             stdOut = await stdOutTask;
-            throw new AdbException(AdbError.CommandTimedOut, strCommand, stdOut);
+            stdErr = await stdErrTask;
+            throw new AdbException(AdbError.CommandTimedOut, strCommand, stdOut + "\n" + stdErr);
         }
 
         stdOut = await stdOutTask;
+        stdErr = await stdErrTask;
+        var completeOutput = stdOut + "\n" + stdErr;
 
         if (exitCode != 0)
         {
-            throw new AdbException(AdbError.CommandFailed, strCommand, stdOut);
+            throw new AdbException(AdbError.CommandFailed, strCommand, completeOutput);
         }
 
+        ValidateOutput(outputMustInclude, outputMustNotInclude, stdOut, strCommand, completeOutput);
+
+        return stdOut;
+    }
+
+    private static void ValidateOutput(
+        string? outputMustInclude,
+        string? outputMustNotInclude,
+        string stdOut,
+        string strCommand,
+        string completeOutput
+    )
+    {
         if (
             !string.IsNullOrEmpty(outputMustInclude)
             && !stdOut.Contains(outputMustInclude, StringComparison.OrdinalIgnoreCase)
         )
         {
-            throw new AdbException(AdbError.CommandFinishedWithInvalidOutput, strCommand, stdOut);
+            throw new AdbException(
+                AdbError.CommandFinishedWithInvalidOutput,
+                strCommand,
+                completeOutput
+            );
         }
 
         if (
@@ -365,9 +389,11 @@ public class AdbClient : IAdb
             && stdOut.Contains(outputMustNotInclude, StringComparison.OrdinalIgnoreCase)
         )
         {
-            throw new AdbException(AdbError.CommandFinishedWithInvalidOutput, strCommand, stdOut);
+            throw new AdbException(
+                AdbError.CommandFinishedWithInvalidOutput,
+                strCommand,
+                completeOutput
+            );
         }
-
-        return stdOut;
     }
 }
