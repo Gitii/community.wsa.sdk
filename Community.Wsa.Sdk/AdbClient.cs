@@ -148,12 +148,13 @@ public class AdbClient : IAdb
     }
 
     /// <inheritdoc />
-    public Task<string> ExecuteCommandAsync(string command, string[] arguments)
+    public Task<string> ExecuteCommandAsync(string command, params string[] arguments)
     {
-        var adbArguments = new string[arguments.Length + 1];
-        Array.Copy(arguments, 0, adbArguments, 1, arguments.Length);
+        var adbArguments = new string[arguments.Length + 2];
+        Array.Copy(arguments, 0, adbArguments, 2, arguments.Length);
 
         adbArguments[0] = "shell";
+        adbArguments[1] = command;
 
         return ExecuteAdbCommandAsync(adbArguments);
     }
@@ -208,7 +209,15 @@ public class AdbClient : IAdb
     )
     {
         var dump = await ExecuteAdbCommandAsync(
-                new string[] { "-s", deviceSerialNumber, "shell", "dumpsys", "package", packageName },
+                new string[]
+                {
+                    "-s",
+                    deviceSerialNumber,
+                    "shell",
+                    "dumpsys",
+                    "package",
+                    packageName
+                },
                 outputMustNotInclude: $"Unable to find package: {packageName}"
             )
             .ConfigureAwait(false);
@@ -276,10 +285,10 @@ public class AdbClient : IAdb
         string FindProperty(string prefix)
         {
             return parts
-                .FirstOrDefault(
-                    (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
-                )
-                ?.Remove(0, prefix.Length + 1) ?? string.Empty;
+                    .FirstOrDefault(
+                        (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
+                    )
+                    ?.Remove(0, prefix.Length + 1) ?? string.Empty;
         }
 
         DeviceType ParseDeviceType(string rawDeviceType)
@@ -290,10 +299,10 @@ public class AdbClient : IAdb
                 "device" => DeviceType.Device,
                 "emulator" => DeviceType.Emulator,
                 _
-                    => throw new ArgumentOutOfRangeException(
-                        rawDeviceType,
-                        $"Device type '{rawDeviceType}' is unknown!"
-                    ),
+                  => throw new ArgumentOutOfRangeException(
+                      rawDeviceType,
+                      $"Device type '{rawDeviceType}' is unknown!"
+                  ),
             };
         }
     }
@@ -311,7 +320,9 @@ public class AdbClient : IAdb
 
         var startInfo = new ProcessStartInfo(PathToAdb!)
         {
-            RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
         };
         var strCommand = $"adb {string.Join(" ", arguments)}";
 
@@ -358,7 +369,8 @@ public class AdbClient : IAdb
         string? outputMustNotInclude,
         string stdOut,
         string strCommand,
-        string completeOutput)
+        string completeOutput
+    )
     {
         if (
             !string.IsNullOrEmpty(outputMustInclude)
