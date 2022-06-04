@@ -643,4 +643,19 @@ firstInstallTime=2022-01-01
             "1"
         );
     }
+
+    [Test]
+    public async Task ExecuteCommandAsync_ShouldExecute()
+    {
+        var actualOutput = await AssertExecutedWith(
+            "foobar",
+            (adb) => adb.ExecuteCommandAsync("test", new string[] { "a", "b" }),
+            "shell",
+            "test",
+            "a",
+            "b"
+        );
+
+        actualOutput.Should().BeEquivalentTo("foobar");
+    }
 }
