@@ -212,7 +212,15 @@ public class AdbClient : IAdb
     )
     {
         var dump = await ExecuteAdbCommandAsync(
-                new string[] { "-s", deviceSerialNumber, "shell", "dumpsys", "package", packageName },
+                new string[]
+                {
+                    "-s",
+                    deviceSerialNumber,
+                    "shell",
+                    "dumpsys",
+                    "package",
+                    packageName
+                },
                 outputMustNotInclude: $"Unable to find package: {packageName}"
             )
             .ConfigureAwait(false);
@@ -280,10 +288,10 @@ public class AdbClient : IAdb
         string FindProperty(string prefix)
         {
             return parts
-                .FirstOrDefault(
-                    (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
-                )
-                ?.Remove(0, prefix.Length + 1) ?? string.Empty;
+                    .FirstOrDefault(
+                        (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
+                    )
+                    ?.Remove(0, prefix.Length + 1) ?? string.Empty;
         }
 
         DeviceType ParseDeviceType(string rawDeviceType)
@@ -294,10 +302,10 @@ public class AdbClient : IAdb
                 "device" => DeviceType.Device,
                 "emulator" => DeviceType.Emulator,
                 _
-                    => throw new ArgumentOutOfRangeException(
-                        rawDeviceType,
-                        $"Device type '{rawDeviceType}' is unknown!"
-                    ),
+                  => throw new ArgumentOutOfRangeException(
+                      rawDeviceType,
+                      $"Device type '{rawDeviceType}' is unknown!"
+                  ),
             };
         }
     }
@@ -362,14 +370,16 @@ public class AdbClient : IAdb
 
         ValidateOutput(outputMustInclude, outputMustNotInclude, stdOut, strCommand, completeOutput);
 
-        return stdOut;
+        return stdOut.Trim();
     }
 
     private (ProcessStartInfo startInfo, string strCommand) BuildStartInfo(string[] arguments)
     {
         var startInfo = new ProcessStartInfo(PathToAdb!)
         {
-            RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true
         };
         var strCommand = $"adb {string.Join(" ", arguments)}";
 
