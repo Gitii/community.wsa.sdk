@@ -116,14 +116,95 @@ public class AdbClientTests
         var pm = A.Fake<IProcessManager>();
         var env = A.Fake<IEnvironment>();
         var io = A.Fake<IIo>();
-        var process = ProcessTestHelpers.TimesOut();
+        var processTry1 = ProcessTestHelpers.TimesOut();
+        var processKillServer = ProcessTestHelpers.Exits();
+        var processStartServer = ProcessTestHelpers.Exits();
+        var processTry2 = ProcessTestHelpers.TimesOut();
 
-        A.CallTo(() => pm.Start(A<ProcessStartInfo>._)).Returns(process);
+        A.CallTo(() => pm.Start(A<ProcessStartInfo>._))
+            .Returns(processTry1)
+            .Once()
+            .Then.Returns(processKillServer)
+            .Once()
+            .Then.Returns(processStartServer)
+            .Once()
+            .Then.Returns(processTry2)
+            .Once();
 
         var adb = new AdbClient(pm, env, io);
 
         var fakePathToAdb = "Ü:/adb.exe";
         adb.PathToAdb = fakePathToAdb;
+
+        var call = async () => await adb.InstallPackageAsync("sn", "fp");
+
+        (await call.Should().ThrowAsync<AdbException>()).Where(
+            (ex) => ex.Error == AdbError.CommandTimedOut
+        );
+
+        A.CallTo(() => pm.Start(A<ProcessStartInfo>._)).MustHaveHappened();
+        A.CallTo(() => processTry1.WaitForExitAsync(A<int>._)).MustHaveHappened();
+        A.CallTo(() => processKillServer.WaitForExitAsync(A<int>._)).MustHaveHappened();
+        A.CallTo(() => processStartServer.WaitForExitAsync(A<int>._)).MustHaveHappened();
+        A.CallTo(() => processTry2.WaitForExitAsync(A<int>._)).MustHaveHappened();
+
+        A.CallTo(() => processTry1.Kill()).MustHaveHappened();
+        A.CallTo(() => processTry2.Kill()).MustHaveHappened();
+    }
+
+    [Test]
+    public async Task InstallPackageAsync_ShouldTimeoutAndThenExit()
+    {
+        var pm = A.Fake<IProcessManager>();
+        var env = A.Fake<IEnvironment>();
+        var io = A.Fake<IIo>();
+        var processTry1 = ProcessTestHelpers.TimesOut();
+        var processKillServer = ProcessTestHelpers.Exits();
+        var processStartServer = ProcessTestHelpers.Exits();
+        var processTry2 = ProcessTestHelpers.Exits(output: "Success");
+
+        A.CallTo(() => pm.Start(A<ProcessStartInfo>._))
+            .Returns(processTry1)
+            .Once()
+            .Then.Returns(processKillServer)
+            .Once()
+            .Then.Returns(processStartServer)
+            .Once()
+            .Then.Returns(processTry2)
+            .Once();
+
+        var adb = new AdbClient(pm, env, io);
+
+        var fakePathToAdb = "Ü:/adb.exe";
+        adb.PathToAdb = fakePathToAdb;
+
+        await adb.InstallPackageAsync("sn", "fp");
+
+        A.CallTo(() => pm.Start(A<ProcessStartInfo>._)).MustHaveHappened();
+        A.CallTo(() => processTry1.WaitForExitAsync(A<int>._)).MustHaveHappened();
+        A.CallTo(() => processKillServer.WaitForExitAsync(A<int>._)).MustHaveHappened();
+        A.CallTo(() => processStartServer.WaitForExitAsync(A<int>._)).MustHaveHappened();
+        A.CallTo(() => processTry2.WaitForExitAsync(A<int>._)).MustHaveHappened();
+
+        A.CallTo(() => processTry1.Kill()).MustHaveHappened();
+        A.CallTo(() => processTry2.Kill()).MustNotHaveHappened();
+    }
+
+    [Test]
+    public async Task InstallPackageAsync_ShouldTimeoutWithoutRestart()
+    {
+        var pm = A.Fake<IProcessManager>();
+        var env = A.Fake<IEnvironment>();
+        var io = A.Fake<IIo>();
+        var process = ProcessTestHelpers.TimesOut();
+
+        A.CallTo(() => pm.Start(A<ProcessStartInfo>._)).Returns(process).Once();
+
+        var adb = new AdbClient(pm, env, io);
+
+        var fakePathToAdb = "Ü:/adb.exe";
+        adb.PathToAdb = fakePathToAdb;
+        adb.RestartServerOnCommandTimeout = false;
 
         var call = async () => await adb.InstallPackageAsync("sn", "fp");
 

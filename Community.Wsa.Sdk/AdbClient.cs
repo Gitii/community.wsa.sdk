@@ -35,6 +35,9 @@ public class AdbClient : IAdb
     public string? PathToAdb { get; set; }
 
     /// <inheritdoc />
+    public bool RestartServerOnCommandTimeout { get; set; } = true;
+
+    /// <inheritdoc />
     public Task InstallPackageAsync(
         string deviceSerialNumber,
         string filePath,
@@ -209,15 +212,7 @@ public class AdbClient : IAdb
     )
     {
         var dump = await ExecuteAdbCommandAsync(
-                new string[]
-                {
-                    "-s",
-                    deviceSerialNumber,
-                    "shell",
-                    "dumpsys",
-                    "package",
-                    packageName
-                },
+                new string[] { "-s", deviceSerialNumber, "shell", "dumpsys", "package", packageName },
                 outputMustNotInclude: $"Unable to find package: {packageName}"
             )
             .ConfigureAwait(false);
@@ -285,10 +280,10 @@ public class AdbClient : IAdb
         string FindProperty(string prefix)
         {
             return parts
-                    .FirstOrDefault(
-                        (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
-                    )
-                    ?.Remove(0, prefix.Length + 1) ?? string.Empty;
+                .FirstOrDefault(
+                    (prop) => prop.StartsWith(prefix + ":", StringComparison.Ordinal)
+                )
+                ?.Remove(0, prefix.Length + 1) ?? string.Empty;
         }
 
         DeviceType ParseDeviceType(string rawDeviceType)
@@ -299,10 +294,10 @@ public class AdbClient : IAdb
                 "device" => DeviceType.Device,
                 "emulator" => DeviceType.Emulator,
                 _
-                  => throw new ArgumentOutOfRangeException(
-                      rawDeviceType,
-                      $"Device type '{rawDeviceType}' is unknown!"
-                  ),
+                    => throw new ArgumentOutOfRangeException(
+                        rawDeviceType,
+                        $"Device type '{rawDeviceType}' is unknown!"
+                    ),
             };
         }
     }
@@ -310,7 +305,8 @@ public class AdbClient : IAdb
     internal virtual async Task<string> ExecuteAdbCommandAsync(
         string[] arguments,
         string? outputMustInclude = null,
-        string? outputMustNotInclude = null
+        string? outputMustNotInclude = null,
+        bool? restartServerOnTimeout = null
     )
     {
         if (!IsInstalled)
@@ -318,18 +314,7 @@ public class AdbClient : IAdb
             throw new AdbException(AdbError.AdbIsNotInstalled);
         }
 
-        var startInfo = new ProcessStartInfo(PathToAdb!)
-        {
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = true
-        };
-        var strCommand = $"adb {string.Join(" ", arguments)}";
-
-        foreach (var argument in arguments.Where((s) => s.Length > 0))
-        {
-            startInfo.ArgumentList.Add(argument);
-        }
+        var (startInfo, strCommand) = BuildStartInfo(arguments);
 
         var process =
             _processManager.Start(startInfo) ?? throw new AdbException(AdbError.CannotStartAdb);
@@ -345,9 +330,25 @@ public class AdbClient : IAdb
         if (!exitCode.HasValue)
         {
             process.Kill();
-            stdOut = await stdOutTask;
-            stdErr = await stdErrTask;
-            throw new AdbException(AdbError.CommandTimedOut, strCommand, stdOut + "\n" + stdErr);
+            if (restartServerOnTimeout.GetValueOrDefault(RestartServerOnCommandTimeout))
+            {
+                return await RestartAndExecuteAgainAsync(
+                        arguments,
+                        outputMustInclude,
+                        outputMustNotInclude
+                    )
+                    .ConfigureAwait(false);
+            }
+            else
+            {
+                stdOut = await stdOutTask;
+                stdErr = await stdErrTask;
+                throw new AdbException(
+                    AdbError.CommandTimedOut,
+                    strCommand,
+                    stdOut + "\n" + stdErr
+                );
+            }
         }
 
         stdOut = await stdOutTask;
@@ -362,6 +363,42 @@ public class AdbClient : IAdb
         ValidateOutput(outputMustInclude, outputMustNotInclude, stdOut, strCommand, completeOutput);
 
         return stdOut;
+    }
+
+    private (ProcessStartInfo startInfo, string strCommand) BuildStartInfo(string[] arguments)
+    {
+        var startInfo = new ProcessStartInfo(PathToAdb!)
+        {
+            RedirectStandardOutput = true, RedirectStandardError = true, CreateNoWindow = true
+        };
+        var strCommand = $"adb {string.Join(" ", arguments)}";
+
+        foreach (var argument in arguments.Where((s) => s.Length > 0))
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        return (startInfo, strCommand);
+    }
+
+    private async Task<string> RestartAndExecuteAgainAsync(
+        string[] arguments,
+        string? outputMustInclude,
+        string? outputMustNotInclude
+    )
+    {
+        await ExecuteAdbCommandAsync(new string[] { "kill-server" }, restartServerOnTimeout: false)
+            .ConfigureAwait(false);
+        await ExecuteAdbCommandAsync(new string[] { "start-server" }, restartServerOnTimeout: false)
+            .ConfigureAwait(false);
+
+        return await ExecuteAdbCommandAsync(
+                arguments,
+                outputMustInclude,
+                outputMustNotInclude,
+                false
+            )
+            .ConfigureAwait(false);
     }
 
     private static void ValidateOutput(
