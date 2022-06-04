@@ -151,7 +151,7 @@ public class AdbClient : IAdb
     }
 
     /// <inheritdoc />
-    public Task<string> ExecuteCommandAsync(string command, params string[] arguments)
+    public async Task<string> ExecuteCommandAsync(string command, params string[] arguments)
     {
         var adbArguments = new string[arguments.Length + 2];
         Array.Copy(arguments, 0, adbArguments, 2, arguments.Length);
@@ -159,7 +159,7 @@ public class AdbClient : IAdb
         adbArguments[0] = "shell";
         adbArguments[1] = command;
 
-        return ExecuteAdbCommandAsync(adbArguments);
+        return (await ExecuteAdbCommandAsync(adbArguments).ConfigureAwait(false)).Trim();
     }
 
     private bool CheckIfAdbIsAvailable()
@@ -370,7 +370,7 @@ public class AdbClient : IAdb
 
         ValidateOutput(outputMustInclude, outputMustNotInclude, stdOut, strCommand, completeOutput);
 
-        return stdOut.Trim();
+        return stdOut;
     }
 
     private (ProcessStartInfo startInfo, string strCommand) BuildStartInfo(string[] arguments)
