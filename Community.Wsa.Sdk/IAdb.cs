@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Threading.Tasks;
+using ABI.Windows.Foundation.Collections;
 
 namespace Community.Wsa.Sdk;
 
@@ -17,6 +18,13 @@ public interface IAdb
     /// Returns the full path to <c>adb.exe</c> or <c>null</c> if it's not installed.
     /// </summary>
     string? PathToAdb { get; }
+
+    /// <summary>
+    /// If <c>true</c>, the adb server will be restarted (once) and the command then executed again.
+    /// If <c>true</c> and the commands times out twice, the timeout exception will not be handled.
+    /// If <c>false</c>, a timeout of command execution will not be handled.
+    /// </summary>
+    bool RestartServerOnCommandTimeout { get; set; }
 
     /// <summary>
     /// Installs the specified application package on the specified device.
