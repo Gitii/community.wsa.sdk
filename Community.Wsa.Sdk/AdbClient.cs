@@ -301,6 +301,7 @@ public class AdbClient : IAdb
                 "offline" => DeviceType.Offline,
                 "device" => DeviceType.Device,
                 "emulator" => DeviceType.Emulator,
+                "unauthorized" => DeviceType.Unauthorized,
                 _
                   => throw new ArgumentOutOfRangeException(
                       rawDeviceType,

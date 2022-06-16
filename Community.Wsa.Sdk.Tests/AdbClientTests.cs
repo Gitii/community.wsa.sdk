@@ -424,6 +424,7 @@ List of devices attached
 sn1 device   product:p1 model:m1 device:d1 transport_id:1
 sn2 offline  product:p2 model:m2 device:d2 transport_id:2
 sn3 emulator
+sn4 unauthorized
 ".Trim()
         );
 
@@ -464,6 +465,15 @@ sn3 emulator
                     DeviceSerialNumber = "sn3",
                     DeviceCode = "",
                     DeviceType = DeviceType.Emulator,
+                    ModelNumber = "",
+                    ProductCode = "",
+                    TransportId = ""
+                },
+                new KnownDevice()
+                {
+                    DeviceSerialNumber = "sn4",
+                    DeviceCode = "",
+                    DeviceType = DeviceType.Unauthorized,
                     ModelNumber = "",
                     ProductCode = "",
                     TransportId = ""

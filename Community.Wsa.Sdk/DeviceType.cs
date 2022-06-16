@@ -18,5 +18,10 @@ public enum DeviceType
     /// <summary>
     /// The device is running in an emulator.
     /// </summary>
-    Emulator
+    Emulator,
+
+    /// <summary>
+    /// The device access is unauthorized.
+    /// </summary>
+    Unauthorized
 }
